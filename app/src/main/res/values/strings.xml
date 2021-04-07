@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">FPPTest</string>
+    <string name="ip_address" />
+</resources>
