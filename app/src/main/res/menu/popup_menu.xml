@@ -2,10 +2,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/starttest"
-        android:title="Start Test" />
+        android:title="Start Testing" />
     <item
         android:id="@+id/stoptest"
-        android:title="Stop Test" />
+        android:title="Stop Testing" />
     <item
         android:id="@+id/open"
         android:title="Open Web Browser" />

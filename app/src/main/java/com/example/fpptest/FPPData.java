@@ -17,7 +17,6 @@ public class FPPData{
 
     public FPPData()
     {
-
     }
 
     public FPPData(String json)
@@ -79,15 +78,10 @@ public class FPPData{
        //return false;
     }
 
-    /*@Override
-    public int compareTo(FPPData arg0) {
-
-        return this.getIP().compareTo(arg0.getIP());
-    }*/
-
     @Override
     public String toString() {
-        return "IP:" + m_IP + " Host:" + m_Host + " Ver:" + m_VerMajor + "." + m_VerMinor + " Type:" + m_Platform ;
+        //return "IP:" + m_IP + " Host:" + m_Host + " Ver:" + m_VerMajor + "." + m_VerMinor + " Type:" + m_Platform ;
+        return "IP:" + m_IP + " Mode:" + m_Mode + " Ver:" + m_VerMajor + "." + m_VerMinor + " Type:" + m_Platform ;
     }
 
     void readJson(String json) {
@@ -134,15 +128,6 @@ public class FPPData{
             if (json.has("minorVersion") ) {
                 m_VerMinor = json.getInt("minorVersion");
             }
-            /*
-            if (intervention instanceof JSONArray) {
-                // It's an array
-                interventionJsonArray = (JSONArray)intervention;
-            }
-            else if (intervention instanceof JSONObject) {
-                // It's an object
-                interventionObject = (JSONObject)intervention;
-            }*/
 
             if (json.has("IPs") )
             {

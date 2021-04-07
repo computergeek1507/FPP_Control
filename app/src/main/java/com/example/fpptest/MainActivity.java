@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
     void Show_Input()
     {
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
-        alert.setTitle("Add FPP");
+        alert.setTitle("Add FPP Device");
         alert.setMessage("Enter Host Name or IP Address:");
 
         // Set an EditText view to get user input
@@ -235,11 +235,11 @@ public class MainActivity extends AppCompatActivity {
         String[] arrOfIps = ips.split(",");
 
         for (String ip : arrOfIps) {
-            ip = ip.trim();//not needed probaby
+            ip = ip.trim();//not needed probably
             if(ip.isEmpty()) {
                 continue;
             }
-            Probe_FPP(ip,false);
+            Probe_FPP(ip, true);
         }
     }
 
