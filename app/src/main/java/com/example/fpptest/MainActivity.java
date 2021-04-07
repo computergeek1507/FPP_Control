@@ -108,6 +108,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_add:
                 Show_Input();
                 return true;
+            case R.id.action_main_ip:
+                Show_Main_Input();
+                return true;
             //case R.id.action_settings:
                //showHelp();
              //   return true;
@@ -128,7 +131,38 @@ public class MainActivity extends AppCompatActivity {
 
         alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
-                Probe_FPP(input.getText().toString() ,true);
+                Probe_FPP(input.getText().toString().trim() ,true);
+            }
+        });
+
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                Toast.makeText(getApplicationContext(), "User Cancelled", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        alert.show();
+    }
+
+    void Show_Main_Input()
+    {
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle("Set Main FPP Device");
+        alert.setMessage("Enter Host Name or IP Address:");
+
+        // Set an EditText view to get user input
+        final EditText input = new EditText(this);
+        alert.setView(input);
+
+        input.setText(pref.getString("Main_IP", ""));
+
+        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                String mainIP = input.getText().toString().trim();
+                SharedPreferences.Editor editor = pref.edit();
+                editor.putString("Main_IP", mainIP);
+                editor.apply();
+                Probe_FPP(mainIP ,true);
             }
         });
 
@@ -228,6 +262,11 @@ public class MainActivity extends AppCompatActivity {
 
     void LoadFPPList()
     {
+        String main_ip = pref.getString("Main_IP", "");
+        if(!main_ip.isEmpty()) {
+            Probe_FPP(main_ip, true);
+        }
+
         String ips = pref.getString("Prev_IPs", "");
         String[] arrOfIps = ips.split(",");
 

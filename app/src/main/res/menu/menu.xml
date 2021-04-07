@@ -5,8 +5,11 @@
         android:id="@+id/action_add"
         android:orderInCategory="100"
         android:icon="@drawable/baseline_search_24"
-        android:title="Add"
+        android:title="Add FPP Device"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/action_main_ip"
+        android:title="Set Main FPP" />
     <!--<item
         android:id="@+id/action_settings"
         android:title="Settings">
