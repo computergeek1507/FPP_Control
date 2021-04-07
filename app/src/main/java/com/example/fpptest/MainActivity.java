@@ -62,12 +62,9 @@ public class MainActivity extends AppCompatActivity {
                 R.layout.support_simple_spinner_dropdown_item,
                 fpp_list);
         list_view.setAdapter(array_Adapter );
-
         list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-
-                int pos = parent.getPositionForView(v);
+                //int pos = parent.getPositionForView(v);
                 PopupMenu popup = new PopupMenu(MainActivity.this, v);
                 popup.getMenuInflater().inflate(R.menu.popup_menu, popup.getMenu());
                 //
