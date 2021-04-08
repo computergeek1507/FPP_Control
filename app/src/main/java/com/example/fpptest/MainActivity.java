@@ -376,7 +376,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void SelectPlaylist(FPPData fpp, String json)
     {
-        try{
+        try {
             List<String> playLists = new ArrayList<String>();
             JSONArray reader = new JSONArray(json);
             for(int i = 0; i <reader.length(); ++i) {
@@ -400,8 +400,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void StartPlaylist(FPPData fpp, String playlist) {
-        try{
-            if(fpp.getVerMajor() > 4){
+        try
+        {
+            if(fpp.getVerMajor() > 4)
+            {
                 JSONObject testSet = new JSONObject();
                 testSet.put("command", "Start Playlist");
 
@@ -453,7 +455,6 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onResponse(String response) {
                                 Toast.makeText(getApplicationContext(), "Sent Successfully" , Toast.LENGTH_SHORT).show();
-                                //add_fpp_device(response, probeForOthers);
                             }
                         }, new Response.ErrorListener() {
                     @Override
@@ -482,7 +483,7 @@ public class MainActivity extends AppCompatActivity {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        //add_fpp_device(response, probeForOthers);
+                        Toast.makeText(getApplicationContext(), "Sent Successfully" , Toast.LENGTH_SHORT).show();
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -502,7 +503,7 @@ public class MainActivity extends AppCompatActivity {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        //add_fpp_device(response, probeForOthers);
+                        Toast.makeText(getApplicationContext(), "Sent Successfully" , Toast.LENGTH_SHORT).show();
                     }
                 }, new Response.ErrorListener() {
             @Override

@@ -17,5 +17,5 @@
         android:title="Stop Testing" />
     <item
         android:id="@+id/open"
-        android:title="Open Web Browser" />
+        android:title="Open in Web Browser" />
 </menu>
