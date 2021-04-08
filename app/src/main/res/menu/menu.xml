@@ -8,8 +8,14 @@
         android:title="Add FPP Device"
         app:showAsAction="always" />
     <item
-        android:id="@+id/action_main_ip"
-        android:title="Set Main FPP" />
+        android:id="@+id/action_start_all_test"
+        android:title="Start Testing All" />
+    <item
+        android:id="@+id/action_stop_all_test"
+        android:title="Stop Testing All" />
+    <item
+        android:id="@+id/action_clear_ips"
+        android:title="Clear Stored IPs" />
     <!--<item
         android:id="@+id/action_settings"
         android:title="Settings">

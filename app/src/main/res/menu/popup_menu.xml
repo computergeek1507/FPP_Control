@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
+        android:id="@+id/startplaylist"
+        android:title="Start Playlist" />
+    <item
+        android:id="@+id/stopplaylist"
+        android:title="Stop Playlist Gracefully" />
+    <item
+        android:id="@+id/stopplaylistnow"
+        android:title="Stop Playlist Now" />
+    <item
         android:id="@+id/starttest"
         android:title="Start Testing" />
     <item
