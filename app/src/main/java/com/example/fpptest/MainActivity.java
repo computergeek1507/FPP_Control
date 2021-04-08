@@ -127,14 +127,12 @@ public class MainActivity extends AppCompatActivity {
                 Show_IP_Input();
                 return true;
             case R.id.action_start_all_test:
-                for (FPPData fpp : fpp_list)
-                {
+                for (FPPData fpp : fpp_list) {
                     SetTesting(fpp,1);
                 }
                 return true;
             case R.id.action_stop_all_test:
-                for (FPPData fpp : fpp_list)
-                {
+                for (FPPData fpp : fpp_list) {
                     SetTesting(fpp,0);
                 }
                 return true;
@@ -288,8 +286,7 @@ public class MainActivity extends AppCompatActivity {
             if(fpp.getVerMajor() > 4) {
                 final String url = String.format("http://%s/api/testmode", fpp.getIP());
                 Send_HTTP_POST_Request(url, data);
-            }
-            else {
+            } else {
                 final String url = String.format("http://%s/fppjson.php", fpp.getIP());
                 final StringRequest MyStringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
                     @Override
@@ -363,8 +360,8 @@ public class MainActivity extends AppCompatActivity {
 
                 JSONArray array = new JSONArray();
                 array.put(playlist);
-                array.put("false");
-                array.put("false");
+                array.put("true");//repeat
+                array.put("false");//start if running
                 testSet.put("args", array);
 
                 final String data = testSet.toString();
@@ -373,7 +370,7 @@ public class MainActivity extends AppCompatActivity {
 
                 Send_HTTP_POST_Request(url, data);
             } else {
-                final String url = String.format("http://%s/fppxml.php?command=startPlaylist&playList=%s&repeat=0", fpp.getIP(), playlist);
+                final String url = String.format("http://%s/fppxml.php?command=startPlaylist&playList=%s&repeat=1", fpp.getIP(), playlist);
                 Send_HTTP_Request(url);
             }
 
