@@ -25,6 +25,8 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.android.volley.AuthFailureError;
@@ -52,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
     RequestQueue queue;
     List<String> ip_list = new ArrayList<String>();
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -67,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
                 this,
                 R.layout.support_simple_spinner_dropdown_item,
                 fpp_list);
+
         list_view.setAdapter(array_Adapter );
         list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
@@ -122,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
         // Handle item selection
         switch (item.getItemId()) {
             case R.id.action_add:
-                Show_Input();
+                Show_IP_Input();
                 return true;
             case R.id.action_start_all_test:
                 for (FPPData fpp : fpp_list)
@@ -150,8 +152,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void Show_Input()
-    {
+    void Show_IP_Input() {
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         alert.setTitle("Add FPP Device");
         alert.setMessage("Enter Host Name or IP Address:");
@@ -175,13 +176,12 @@ public class MainActivity extends AppCompatActivity {
         alert.show();
     }
 
-    void Probe_FPP(String ip, boolean probeForOthers)
-    {
-        String url=String.format("http://%s/fppjson.php?command=getSysInfo", ip);
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
+    void Probe_FPP(String ip, boolean probeForOthers) {
+        final String url = String.format("http://%s/fppjson.php?command=getSysInfo", ip);
+        final JsonObjectRequest jsonRequest = new JsonObjectRequest(Request.Method.GET, url,null,
+                new Response.Listener<JSONObject>() {
                     @Override
-                    public void onResponse(String response) {
+                    public void onResponse(JSONObject response) {
                         add_fpp_device(response, probeForOthers);
                     }
                 }, new Response.ErrorListener() {
@@ -190,11 +190,10 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "That didn't work!\n" + error.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
-        queue.add(stringRequest);
+        queue.add(jsonRequest);
     }
     
-    void add_fpp_device(String json, boolean probeForOthers)
-    {
+    void add_fpp_device(JSONObject json, boolean probeForOthers) {
         FPPData fpp = new FPPData(json);
         if(!fpp_list.contains(fpp)) {
             fpp_list.add(fpp);
@@ -213,13 +212,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void add_fpp_devices(String json)
-    {
+    void add_fpp_devices(JSONArray jsonArray) {
         try {
-            JSONArray reader = new JSONArray(json);
-            for(int i = 0; i <reader.length(); ++i)
-            {
-                FPPData fpp = new FPPData( reader.getJSONObject(i));
+            for(int i = 0; i <jsonArray.length(); ++i) {
+                FPPData fpp = new FPPData( jsonArray.getJSONObject(i));
                 if(!fpp_list.contains(fpp)) {
                     fpp_list.add(fpp);
                 }
@@ -227,7 +223,6 @@ public class MainActivity extends AppCompatActivity {
                 if(!ip_list.contains(fpp.getIP())) {
                     ip_list.add(fpp.getIP());
                 }
-
             }
             Collections.sort(fpp_list, new FPPDataComparator());
 
@@ -239,13 +234,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     
-    void find_other_fpp_devices(String ip)
-    {
-        String url = String.format("http://%s/fppjson.php?command=getFPPSystems", ip);
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
+    void find_other_fpp_devices(String ip) {
+        final String url = String.format("http://%s/fppjson.php?command=getFPPSystems", ip);
+        final JsonArrayRequest jsonRequest = new JsonArrayRequest(Request.Method.GET, url,null,
+                new Response.Listener<JSONArray>() {
                     @Override
-                    public void onResponse(String response) {
+                    public void onResponse(JSONArray response) {
                         add_fpp_devices(response);
                     }
                 }, new Response.ErrorListener() {
@@ -254,21 +248,19 @@ public class MainActivity extends AppCompatActivity {
                 //Toast.makeText(getApplicationContext(), "That didn't work!\n" + error.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
-        queue.add(stringRequest);
+        queue.add(jsonRequest);
     }
 
-    void SaveFPPList()
-    {
-        String ips = TextUtils.join(",", ip_list);
+    void SaveFPPList() {
+        final String ips = TextUtils.join(",", ip_list);
         SharedPreferences.Editor editor = pref.edit();
         editor.putString("Prev_IPs", ips);
         editor.apply();
     }
 
-    void LoadFPPList()
-    {
-        String ips = pref.getString("Prev_IPs", "");
-        String[] arrOfIps = ips.split(",");
+    void LoadFPPList() {
+        final String ips = pref.getString("Prev_IPs", "");
+        final String[] arrOfIps = ips.split(",");
 
         for (String ip : arrOfIps) {
             ip = ip.trim();//not needed probably
@@ -279,8 +271,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void SetTesting(FPPData fpp, int enable)
-    {
+    void SetTesting(FPPData fpp, int enable) {
         try {
             JSONObject testSet = new JSONObject();
             testSet.put("cycleMS", 500);
@@ -292,43 +283,15 @@ public class MainActivity extends AppCompatActivity {
             testSet.put("subMode", "RGBChase-RGB");
             testSet.put("colorPattern", "FF000000FF000000FF");
 
-            String data = testSet.toString();
+            final  String data = testSet.toString();
 
-            if(fpp.getVerMajor() > 4)
-            {
-                String url = String.format("http://%s/api/testmode", fpp.getIP());
-                StringRequest MyStringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        Toast.makeText(getApplicationContext(), "Sent Successfully" , Toast.LENGTH_SHORT).show();
-                    }
-                }, new Response.ErrorListener() { //Create an error listener to handle errors appropriately.
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Error!\n" + error.getMessage() , Toast.LENGTH_LONG).show();
-                    }
-                }) {
-                    @Override
-                    public String getBodyContentType() {
-                        return "application/json; charset=utf-8";
-                    }
-
-                    @Override
-                    public byte[] getBody() throws AuthFailureError {
-                        try {
-                            return data == null ? null : data.getBytes("utf-8");
-                        } catch (UnsupportedEncodingException uee) {
-                            VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", data, "utf-8");
-                            return null;
-                        }
-                    }
-                };
-                queue.add(MyStringRequest);
+            if(fpp.getVerMajor() > 4) {
+                final String url = String.format("http://%s/api/testmode", fpp.getIP());
+                Send_HTTP_POST_Request(url, data);
             }
-            else
-            {
-                String url = String.format("http://%s/fppjson.php", fpp.getIP());
-                StringRequest MyStringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+            else {
+                final String url = String.format("http://%s/fppjson.php", fpp.getIP());
+                final StringRequest MyStringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         Toast.makeText(getApplicationContext(), "Sent Successfully" , Toast.LENGTH_SHORT).show();
@@ -349,20 +312,17 @@ public class MainActivity extends AppCompatActivity {
                 queue.add(MyStringRequest);
             }
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             Toast.makeText(getApplicationContext(), "That didn't work!\n" + ex.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
     private void GetPlaylists(FPPData fpp) {
-        //http://192.168.1.5/api/playlists
-
-        String url=String.format("http://%s/api/playlists", fpp.getIP());
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
+        final String url = String.format("http://%s/api/playlists", fpp.getIP());
+        final JsonArrayRequest stringRequest = new JsonArrayRequest(Request.Method.GET, url,null,
+                new Response.Listener<JSONArray>() {
                     @Override
-                    public void onResponse(String response) {
+                    public void onResponse(JSONArray response) {
                         SelectPlaylist(fpp, response);
                     }
                 }, new Response.ErrorListener() {
@@ -374,13 +334,11 @@ public class MainActivity extends AppCompatActivity {
         queue.add(stringRequest);
     }
 
-    private void SelectPlaylist(FPPData fpp, String json)
-    {
+    private void SelectPlaylist(FPPData fpp, JSONArray jsonArray) {
         try {
             List<String> playLists = new ArrayList<String>();
-            JSONArray reader = new JSONArray(json);
-            for(int i = 0; i <reader.length(); ++i) {
-                playLists.add(reader.getString(i));
+            for(int i = 0; i < jsonArray.length(); ++i) {
+                playLists.add(jsonArray.getString(i));
             }
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Select Playlist")
@@ -392,18 +350,14 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
             builder.show();
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             Toast.makeText(getApplicationContext(), "That didn't work!\n" + ex.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
     private void StartPlaylist(FPPData fpp, String playlist) {
-        try
-        {
-            if(fpp.getVerMajor() > 4)
-            {
+        try {
+            if(fpp.getVerMajor() > 4) {
                 JSONObject testSet = new JSONObject();
                 testSet.put("command", "Start Playlist");
 
@@ -413,73 +367,39 @@ public class MainActivity extends AppCompatActivity {
                 array.put("false");
                 testSet.put("args", array);
 
-                String data = testSet.toString();
+                final String data = testSet.toString();
 
-                String url=String.format("http://%s/api/command", fpp.getIP());
+                final String url = String.format("http://%s/api/command", fpp.getIP());
 
-                StringRequest MyStringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        Toast.makeText(getApplicationContext(), "Sent Successfully" , Toast.LENGTH_SHORT).show();
-                    }
-                }, new Response.ErrorListener() { //Create an error listener to handle errors appropriately.
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Error!\n" + error.getMessage() , Toast.LENGTH_LONG).show();
-                    }
-                }) {
-                    @Override
-                    public String getBodyContentType() {
-                        return "application/json; charset=utf-8";
-                    }
-
-                    @Override
-                    public byte[] getBody() throws AuthFailureError {
-                        try {
-                            return data == null ? null : data.getBytes("utf-8");
-                        } catch (UnsupportedEncodingException uee) {
-                            VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", data, "utf-8");
-                            return null;
-                        }
-                    }
-                };
-                queue.add(MyStringRequest);
-            }
-            else
-            {
-                String url=String.format("http://%s/fppxml.php?command=startPlaylist&playList=%s&repeat=0", fpp.getIP(), playlist);
-                //fppxml.php?command=startPlaylist&playList=" + Playlist + "&repeat=" + repeat + "&playEntry=" + PlayEntrySelected + "&section=
-
-                StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                        new Response.Listener<String>() {
-                            @Override
-                            public void onResponse(String response) {
-                                Toast.makeText(getApplicationContext(), "Sent Successfully" , Toast.LENGTH_SHORT).show();
-                            }
-                        }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "That didn't work!\n" + error.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                });
-                queue.add(stringRequest);
+                Send_HTTP_POST_Request(url, data);
+            } else {
+                final String url = String.format("http://%s/fppxml.php?command=startPlaylist&playList=%s&repeat=0", fpp.getIP(), playlist);
+                Send_HTTP_Request(url);
             }
 
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             Toast.makeText(getApplicationContext(), "That didn't work!\n" + ex.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
     private void StopPlaylistNow(FPPData fpp) {
-        ///api/sequence/current/stop
-
-        String url=String.format("http://%s/fppxml.php?command=stopNow", fpp.getIP());
-        if(fpp.getVerMajor() > 4){
-            url = String.format("http://%s/api/playlists/stop", fpp.getIP());
+        if( fpp.getVerMajor() > 4 ) {
+            Send_HTTP_Request(String.format("http://%s/api/playlists/stop", fpp.getIP()));
+        } else {
+            Send_HTTP_Request(String.format("http://%s/fppxml.php?command=stopNow", fpp.getIP()));
         }
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+    }
+
+    private void StopPlaylistGracefully(FPPData fpp) {
+        if( fpp.getVerMajor() > 4 ) {
+            Send_HTTP_Request(String.format("http://%s/api/playlists/stopgracefully", fpp.getIP()));
+        } else {
+            Send_HTTP_Request(String.format("http://%s/fppxml.php?command=stopGracefully", fpp.getIP()));
+        }
+    }
+
+    private void Send_HTTP_Request(String url) {
+        final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -494,12 +414,8 @@ public class MainActivity extends AppCompatActivity {
         queue.add(stringRequest);
     }
 
-    private void StopPlaylistGracefully(FPPData fpp) {
-        String url=String.format("http://%s/fppxml.php?command=stopGracefully", fpp.getIP());
-        if(fpp.getVerMajor() > 4){
-            url = String.format("http://%s/api/playlists/stopgracefully", fpp.getIP());
-        }
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+    private void Send_HTTP_POST_Request(String url, String data) {
+        final StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -510,7 +426,22 @@ public class MainActivity extends AppCompatActivity {
             public void onErrorResponse(VolleyError error) {
                 Toast.makeText(getApplicationContext(), "That didn't work!\n" + error.getMessage(), Toast.LENGTH_LONG).show();
             }
-        });
+        }){
+            @Override
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+
+            @Override
+            public byte[] getBody() {
+                try {
+                    return data == null ? null : data.getBytes("utf-8");
+                } catch (UnsupportedEncodingException uee) {
+                    VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", data, "utf-8");
+                    return null;
+                }
+            }
+        };
         queue.add(stringRequest);
     }
 

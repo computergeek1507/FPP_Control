@@ -15,17 +15,10 @@ public class FPPData{
     private int m_VerMajor = -1;
     private int m_VerMinor = -1;
 
-    public FPPData()
-    {
+    public FPPData() {
     }
 
-    public FPPData(String json)
-    {
-        readJson(json);
-    }
-
-    public FPPData(JSONObject json)
-    {
+    public FPPData(JSONObject json) {
         readJson(json);
     }
 
@@ -75,7 +68,6 @@ public class FPPData{
         }
         FPPData other = (FPPData) obj;
         return this.getHost().equals( other.getHost()) && this.getIP().equals(other.getIP()) ;
-       //return false;
     }
 
     @Override
@@ -84,20 +76,9 @@ public class FPPData{
         return "IP:" + m_IP + " Mode:" + m_Mode + " Ver:" + m_VerMajor + "." + m_VerMinor + " Type:" + m_Platform ;
     }
 
-    void readJson(String json) {
+    void readJson(JSONObject json) {
         try {
-            JSONObject reader = new JSONObject(json);
-            readJson(reader);
-        }
-        catch (JSONException ex) {
-
-        }
-    }
-
-    void readJson(JSONObject json)
-    {
-        try {
-            if(json.has("HostName") ){
+            if(json.has("HostName") ) {
                 m_Host = json.getString("HostName");
             }
 
@@ -129,20 +110,15 @@ public class FPPData{
                 m_VerMinor = json.getInt("minorVersion");
             }
 
-            if (json.has("IPs") )
-            {
+            if (json.has("IPs") ) {
                 if (json.get("IPs") instanceof JSONArray) {
                     m_IP = json.getJSONArray("IPs").getString(0);
                 }
             }
-
-
             if (json.has("IP")) {
                 m_IP = json.getString("IP");
             }
-        }
-        catch(JSONException ex)
-        {
+        } catch(JSONException ex) {
 
         }
     }
