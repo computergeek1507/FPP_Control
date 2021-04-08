@@ -29,7 +29,6 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.android.volley.AuthFailureError;
 import com.android.volley.VolleyLog;
 
 import org.json.JSONArray;
@@ -365,7 +364,6 @@ public class MainActivity extends AppCompatActivity {
                 testSet.put("args", array);
 
                 final String data = testSet.toString();
-
                 final String url = String.format("http://%s/api/command", fpp.getIP());
 
                 Send_HTTP_POST_Request(url, data);
