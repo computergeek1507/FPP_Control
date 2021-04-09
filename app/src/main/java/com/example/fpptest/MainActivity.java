@@ -71,10 +71,8 @@ public class MainActivity extends AppCompatActivity {
         list_view.setAdapter(array_Adapter );
         list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                //int pos = parent.getPositionForView(v);
                 PopupMenu popup = new PopupMenu(MainActivity.this, v);
                 popup.getMenuInflater().inflate(R.menu.popup_menu, popup.getMenu());
-                //
                 popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     public boolean onMenuItemClick(MenuItem item) {
                         FPPData fpp = array_Adapter.getItem(position);
@@ -91,6 +89,9 @@ public class MainActivity extends AppCompatActivity {
                                 return true;
                             case R.id.starttest:
                                 SetTesting(fpp,1);
+                                return true;
+                            case R.id.starttestmodel:
+                                SetTestingModel(fpp);
                                 return true;
                             case R.id.stoptest:
                                 SetTesting(fpp,0);
@@ -158,9 +159,15 @@ public class MainActivity extends AppCompatActivity {
         final EditText input = new EditText(this);
         alert.setView(input);
 
+        input.setText( pref.getString("Last_IP", ""));
+
         alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
-                Probe_FPP(input.getText().toString().trim() ,true);
+                final String ip = input.getText().toString().trim();
+                Probe_FPP(ip ,true);
+                SharedPreferences.Editor editor = pref.edit();
+                editor.putString("Last_IP", ip);
+                editor.apply();
             }
         });
 
@@ -175,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
 
     void Probe_FPP(String ip, boolean probeForOthers) {
         final String url = String.format("http://%s/fppjson.php?command=getSysInfo", ip);
-        final JsonObjectRequest jsonRequest = new JsonObjectRequest(Request.Method.GET, url,null,
+        final JsonObjectRequest jsonRequest = new JsonObjectRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -269,11 +276,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void SetTesting(FPPData fpp, int enable) {
+        SetTesting(fpp,enable,"1-1048576");
+    }
+
+    void SetTesting(FPPData fpp, int enable, String channels) {
         try {
             JSONObject testSet = new JSONObject();
             testSet.put("cycleMS", 500);
             testSet.put("enabled", enable);
-            testSet.put("channelSet", "1-1048576");
+            testSet.put("channelSet", channels);
             testSet.put("channelSetType", "channelRange");
 
             testSet.put("mode", "RGBChase");
@@ -393,6 +404,50 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void SetTestingModel(FPPData fpp) {
+        final String url = String.format("http://%s/api/models", fpp.getIP());
+        final JsonArrayRequest stringRequest = new JsonArrayRequest(Request.Method.GET, url,null,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        SelectModel(fpp, response);
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(getApplicationContext(), "That didn't work!\n" + error.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+        queue.add(stringRequest);
+    }
+
+    private void SelectModel(FPPData fpp, JSONArray jsonArray) {
+        try {
+            List<FPPModel> models = new ArrayList<FPPModel>();
+            List<String> str_models = new ArrayList<String>();
+            for(int i = 0; i < jsonArray.length(); ++i) {
+                FPPModel model = new FPPModel(jsonArray.getJSONObject(i));
+                models.add(model);
+                str_models.add(model.getName());
+            }
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Select Model")
+                    .setItems(str_models.toArray(new String[0]), new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            TestModel(fpp, models.get(which));
+                        }
+                    });
+            builder.show();
+        } catch (Exception ex) {
+            Toast.makeText(getApplicationContext(), "That didn't work!\n" + ex.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void TestModel(FPPData fpp, FPPModel model) {
+        final String channels = String.format("%d-%d", model.getStartChannel(),model.getEndChannel());
+        SetTesting(fpp,1, channels);
+    }
+
     private void Send_HTTP_Request(String url) {
         final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
@@ -439,5 +494,4 @@ public class MainActivity extends AppCompatActivity {
         };
         queue.add(stringRequest);
     }
-
 }

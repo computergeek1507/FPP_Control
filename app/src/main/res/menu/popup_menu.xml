@@ -13,6 +13,9 @@
         android:id="@+id/starttest"
         android:title="Start Testing" />
     <item
+        android:id="@+id/starttestmodel"
+        android:title="Start Testing Model" />
+    <item
         android:id="@+id/stoptest"
         android:title="Stop Testing" />
     <item
