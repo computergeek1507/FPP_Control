@@ -58,6 +58,10 @@ public class FPPData{
         return m_VerMinor;
     }
 
+    public String getPrettyVersion() {
+        return String.format("%d.%d", m_VerMajor,m_VerMinor);
+    }
+
     @Override
     public boolean equals(Object obj) {
         if(obj == this) {

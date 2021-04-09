@@ -1,6 +1,5 @@
 package com.example.fpptest;
 
-//import androidx.appcompat.app.AppCompatActivity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -49,9 +48,9 @@ public class MainActivity extends AppCompatActivity {
     ListView list_view;
     final List<FPPData> fpp_list = new ArrayList<FPPData>();
     SharedPreferences pref;
-    ArrayAdapter<FPPData> array_Adapter;
     RequestQueue queue;
     List<String> ip_list = new ArrayList<String>();
+    FPPDataRowAdapter array_Adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -63,12 +62,9 @@ public class MainActivity extends AppCompatActivity {
         queue = Volley.newRequestQueue(MainActivity.this);
 
         list_view = findViewById(R.id.list);
-        array_Adapter = new ArrayAdapter<FPPData>(
-                this,
-                R.layout.support_simple_spinner_dropdown_item,
-                fpp_list);
+        array_Adapter = new FPPDataRowAdapter(this, R.layout.row_item, fpp_list);
+        list_view.setAdapter(array_Adapter);
 
-        list_view.setAdapter(array_Adapter );
         list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 PopupMenu popup = new PopupMenu(MainActivity.this, v);
@@ -155,7 +151,6 @@ public class MainActivity extends AppCompatActivity {
         alert.setTitle("Add FPP Device");
         alert.setMessage("Enter Host Name or IP Address:");
 
-        // Set an EditText view to get user input
         final EditText input = new EditText(this);
         alert.setView(input);
 
@@ -351,8 +346,6 @@ public class MainActivity extends AppCompatActivity {
             builder.setTitle("Select Playlist")
                     .setItems(playLists.toArray(new String[0]), new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
-                            // The 'which' argument contains the index position
-                            // of the selected item
                             StartPlaylist(fpp, playLists.get(which));
                         }
                     });
