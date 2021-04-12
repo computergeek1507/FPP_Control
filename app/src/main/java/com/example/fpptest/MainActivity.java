@@ -1,18 +1,21 @@
 package com.example.fpptest;
 
+import android.app.ActivityManager;
 import android.app.AlertDialog;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.support.v7.app.AppCompatActivity;
@@ -36,11 +39,13 @@ import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import android.text.TextUtils;
 
@@ -51,6 +56,9 @@ public class MainActivity extends AppCompatActivity {
     RequestQueue queue;
     List<String> ip_list = new ArrayList<String>();
     FPPDataRowAdapter array_Adapter;
+    AtomicBoolean refreshing = new AtomicBoolean(false);
+
+    Timer refresh_timer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -105,8 +113,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         LoadFPPList();
+        startRefresh();
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -141,6 +149,11 @@ public class MainActivity extends AppCompatActivity {
             //case R.id.action_settings:
                //showHelp();
              //   return true;
+            /*case R.id.action_quit:
+                this.finish();
+                //System.exit(0);
+                return true;*/
+
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -208,6 +221,7 @@ public class MainActivity extends AppCompatActivity {
                 find_other_fpp_devices(fpp.getIP());
             }
             SaveFPPList();
+            //GetFPPStatus(fpp);
         }
     }
 
@@ -217,6 +231,7 @@ public class MainActivity extends AppCompatActivity {
                 FPPData fpp = new FPPData( jsonArray.getJSONObject(i));
                 if(!fpp_list.contains(fpp)) {
                     fpp_list.add(fpp);
+                    //GetFPPStatus(fpp);
                 }
 
                 if(!ip_list.contains(fpp.getIP())) {
@@ -290,13 +305,14 @@ public class MainActivity extends AppCompatActivity {
 
             if(fpp.getVerMajor() > 4) {
                 final String url = String.format("http://%s/api/testmode", fpp.getIP());
-                Send_HTTP_POST_Request(url, data);
+                Send_HTTP_POST_Request(url, data, fpp);
             } else {
                 final String url = String.format("http://%s/fppjson.php", fpp.getIP());
                 final StringRequest MyStringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         Toast.makeText(getApplicationContext(), "Sent Successfully" , Toast.LENGTH_SHORT).show();
+                        refresh_Status(fpp);
                     }
                 }, new Response.ErrorListener() { //Create an error listener to handle errors appropriately.
                     @Override
@@ -370,10 +386,10 @@ public class MainActivity extends AppCompatActivity {
                 final String data = testSet.toString();
                 final String url = String.format("http://%s/api/command", fpp.getIP());
 
-                Send_HTTP_POST_Request(url, data);
+                Send_HTTP_POST_Request(url, data, fpp);
             } else {
                 final String url = String.format("http://%s/fppxml.php?command=startPlaylist&playList=%s&repeat=1", fpp.getIP(), playlist);
-                Send_HTTP_Request(url);
+                Send_HTTP_Request(url, fpp);
             }
 
         } catch (Exception ex) {
@@ -383,17 +399,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void StopPlaylistNow(FPPData fpp) {
         if( fpp.getVerMajor() > 4 ) {
-            Send_HTTP_Request(String.format("http://%s/api/playlists/stop", fpp.getIP()));
+            Send_HTTP_Request(String.format("http://%s/api/playlists/stop", fpp.getIP()), fpp);
         } else {
-            Send_HTTP_Request(String.format("http://%s/fppxml.php?command=stopNow", fpp.getIP()));
+            Send_HTTP_Request(String.format("http://%s/fppxml.php?command=stopNow", fpp.getIP()), fpp);
         }
     }
 
     private void StopPlaylistGracefully(FPPData fpp) {
         if( fpp.getVerMajor() > 4 ) {
-            Send_HTTP_Request(String.format("http://%s/api/playlists/stopgracefully", fpp.getIP()));
+            Send_HTTP_Request(String.format("http://%s/api/playlists/stopgracefully", fpp.getIP()),fpp);
         } else {
-            Send_HTTP_Request(String.format("http://%s/fppxml.php?command=stopGracefully", fpp.getIP()));
+            Send_HTTP_Request(String.format("http://%s/fppxml.php?command=stopGracefully", fpp.getIP()),fpp);
         }
     }
 
@@ -441,12 +457,70 @@ public class MainActivity extends AppCompatActivity {
         SetTesting(fpp,1, channels);
     }
 
-    private void Send_HTTP_Request(String url) {
+    private void startRefresh() {
+        refresh_timer = new Timer(true);
+        refresh_timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                refresh_all_Status();
+            }
+        }, 2000, 1000*60);
+    }
+
+    private void stopRefresh() {
+        refresh_timer.cancel();
+    }
+
+    private void refresh_all_Status() {
+        if (refreshing.get()) {
+            return;
+        }
+        refreshing.set(true);
+        for (FPPData fpp : fpp_list) {
+            try {
+                GetFPPStatus(fpp);
+            }
+            catch (Exception ex)
+            {
+                Toast.makeText(getApplicationContext(), "That didn't work!\n" + ex.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        }
+        refreshing.set(false);
+    }
+
+    private void refresh_Status(FPPData fpp)
+    {
+        GetFPPStatus(fpp);
+    }
+
+    private void GetFPPStatus(FPPData fpp) {
+        StatusUpdater statusUpdate = new StatusUpdater(this);
+        try {
+            // note: don't use get() if you want your UI thread to keep running
+            // 'get' will pause the UI thread until the task finishes executing
+            statusUpdate.execute(fpp);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void SetFPPStatus(FPPData fp, String status) {
+        for (FPPData fpp : fpp_list) {
+            if( fp.getIP() == fpp.getIP())
+            {
+                fpp.setStatus(status);
+                array_Adapter.notifyDataSetChanged();
+            }
+        }
+    }
+
+    private void Send_HTTP_Request(String url, FPPData fpp) {
         final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         Toast.makeText(getApplicationContext(), "Sent Successfully" , Toast.LENGTH_SHORT).show();
+                        refresh_Status(fpp);
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -457,12 +531,13 @@ public class MainActivity extends AppCompatActivity {
         queue.add(stringRequest);
     }
 
-    private void Send_HTTP_POST_Request(String url, String data) {
+    private void Send_HTTP_POST_Request(String url, String data, FPPData fpp) {
         final StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         Toast.makeText(getApplicationContext(), "Sent Successfully" , Toast.LENGTH_SHORT).show();
+                        refresh_Status(fpp);
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -486,5 +561,23 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         queue.add(stringRequest);
+    }
+
+    @Override
+    protected void onResume() {
+        startRefresh();
+        super.onResume();
+    }
+
+    @Override
+    protected void onStop() {
+        stopRefresh();
+        super.onStop();
+    }
+
+    @Override
+    protected void onPause() {
+        stopRefresh();
+        super.onPause();
     }
 }

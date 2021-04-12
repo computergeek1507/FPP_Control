@@ -11,6 +11,7 @@ public class FPPData{
     private String m_Mode;
     private String m_Platform;
     private String m_Status;
+    private String m_GitBranch;
     private String m_FPPD;
     private int m_VerMajor = -1;
     private int m_VerMinor = -1;
@@ -46,6 +47,10 @@ public class FPPData{
         return m_Status;
     }
 
+    public void setStatus(String status) {
+        m_Status = status;
+    }
+
     public String getFPPD() {
         return m_FPPD;
     }
@@ -59,7 +64,7 @@ public class FPPData{
     }
 
     public String getPrettyVersion() {
-        return String.format("%d.%d", m_VerMajor,m_VerMinor);
+        return String.format("%d.%d", m_VerMajor, m_VerMinor);
     }
 
     @Override
@@ -104,6 +109,10 @@ public class FPPData{
 
             if (json.has("Platform") ) {
                 m_Platform = json.getString("Platform");
+            }
+
+            if (json.has("Branch") ) {
+                m_GitBranch = json.getString("Branch");
             }
 
             if (json.has("majorVersion") ) {

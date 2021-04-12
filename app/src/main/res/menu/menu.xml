@@ -20,4 +20,7 @@
         android:id="@+id/action_settings"
         android:title="Settings">
     </item>-->
+    <!--<item
+        android:id="@+id/action_quit"
+        android:title="Close App" />-->
 </menu>
