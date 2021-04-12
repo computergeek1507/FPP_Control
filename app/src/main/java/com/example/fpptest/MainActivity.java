@@ -337,7 +337,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void GetPlaylists(FPPData fpp) {
         final String url = String.format("http://%s/api/playlists", fpp.getIP());
-        final JsonArrayRequest stringRequest = new JsonArrayRequest(Request.Method.GET, url,null,
+        final JsonArrayRequest jsonRequest = new JsonArrayRequest(Request.Method.GET, url,null,
                 new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
@@ -349,7 +349,7 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "That didn't work!\n" + error.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
-        queue.add(stringRequest);
+        queue.add(jsonRequest);
     }
 
     private void SelectPlaylist(FPPData fpp, JSONArray jsonArray) {
