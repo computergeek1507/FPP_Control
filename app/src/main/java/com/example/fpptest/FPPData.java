@@ -3,18 +3,21 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class FPPData{
+import java.io.Serializable;
 
-    private String m_IP;
-    private String m_Host;
-    private String m_Version;
-    private String m_Mode;
-    private String m_Platform;
-    private String m_Status;
-    private String m_GitBranch;
-    private String m_FPPD;
+public class FPPData implements Serializable {
+
+    private String m_IP = "";
+    private String m_Host = "";
+    private String m_Version = "";
+    private String m_Mode = "";
+    private String m_Platform = "";
+    private String m_Status = "";
+    private String m_GitBranch = "";
+    private String m_FPPD = "";
     private int m_VerMajor = -1;
     private int m_VerMinor = -1;
+    private int m_typeId = 0;
 
     public FPPData() {
     }
@@ -61,6 +64,18 @@ public class FPPData{
 
     public int getVerMinor() {
         return m_VerMinor;
+    }
+
+    public int getTypeID() {
+        return m_typeId;
+    }
+
+    public boolean IsFPPDevice() {
+        return m_typeId > 0x00 && m_typeId < 0x7F;
+    }
+
+    public boolean IsPlayer() {
+        return m_Mode.equalsIgnoreCase("player") || m_Mode.equalsIgnoreCase("master");
     }
 
     public String getPrettyVersion() {
@@ -121,6 +136,10 @@ public class FPPData{
 
             if (json.has("minorVersion") ) {
                 m_VerMinor = json.getInt("minorVersion");
+            }
+
+            if (json.has("typeId") ) {
+                m_typeId = json.getInt("typeId");
             }
 
             if (json.has("IPs") ) {

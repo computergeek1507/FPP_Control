@@ -5,7 +5,7 @@ import org.json.JSONObject;
 
 public class FPPModel {
 
-    private String m_Name;
+    private String m_Name = "";
     private int m_StartChannel = 1;
     private int m_ChannelCount = 1;
 

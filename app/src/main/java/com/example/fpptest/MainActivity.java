@@ -50,6 +50,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import android.text.TextUtils;
 
 public class MainActivity extends AppCompatActivity {
+    public static final String FPP_DATA = "com.example.fpptest.FPPDATA";
     ListView list_view;
     final List<FPPData> fpp_list = new ArrayList<FPPData>();
     SharedPreferences pref;
@@ -61,8 +62,7 @@ public class MainActivity extends AppCompatActivity {
     Timer refresh_timer;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -77,10 +77,26 @@ public class MainActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 PopupMenu popup = new PopupMenu(MainActivity.this, v);
                 popup.getMenuInflater().inflate(R.menu.popup_menu, popup.getMenu());
+                FPPData fpp = array_Adapter.getItem(position);
+
+                if(!fpp.IsFPPDevice()) {
+                    popup.getMenu().findItem(R.id.startplaylist).setVisible(false);
+                    popup.getMenu().findItem(R.id.stopplaylist).setVisible(false);
+                    popup.getMenu().findItem(R.id.stopplaylistnow).setVisible(false);
+                    popup.getMenu().findItem(R.id.starttest).setVisible(false);
+                    popup.getMenu().findItem(R.id.starttestmodel).setVisible(false);
+                    popup.getMenu().findItem(R.id.stoptest).setVisible(false);
+                    popup.getMenu().findItem(R.id.viewwiring).setVisible(false);
+                }
+
+                if(!fpp.IsPlayer()) {
+                    popup.getMenu().findItem(R.id.startplaylist).setVisible(false);
+                    popup.getMenu().findItem(R.id.stopplaylist).setVisible(false);
+                    popup.getMenu().findItem(R.id.stopplaylistnow).setVisible(false);
+                }
+
                 popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     public boolean onMenuItemClick(MenuItem item) {
-                        FPPData fpp = array_Adapter.getItem(position);
-
                         switch (item.getItemId()) {
                             case R.id.startplaylist:
                                 GetPlaylists(fpp);
@@ -99,6 +115,9 @@ public class MainActivity extends AppCompatActivity {
                                 return true;
                             case R.id.stoptest:
                                 SetTesting(fpp,0);
+                                return true;
+                            case R.id.viewwiring:
+                                ViewWiring(fpp);
                                 return true;
                             case R.id.open:
                                 Uri uriUrl = Uri.parse("http://" + fpp.getIP());
@@ -207,14 +226,20 @@ public class MainActivity extends AppCompatActivity {
     
     void add_fpp_device(JSONObject json, boolean probeForOthers) {
         FPPData fpp = new FPPData(json);
+
+        if(fpp.getIP().isEmpty()){
+            return;
+        }
+
         if(!fpp_list.contains(fpp)) {
             fpp_list.add(fpp);
 
             if(!ip_list.contains(fpp.getIP())) {
                 ip_list.add(fpp.getIP());
             }
-
-            Collections.sort(fpp_list, new FPPDataComparator());
+            if(fpp_list.size() > 1){
+                Collections.sort(fpp_list, new FPPDataComparator());
+            }
             array_Adapter.notifyDataSetChanged();
 
             if(probeForOthers) {
@@ -229,6 +254,11 @@ public class MainActivity extends AppCompatActivity {
         try {
             for(int i = 0; i <jsonArray.length(); ++i) {
                 FPPData fpp = new FPPData( jsonArray.getJSONObject(i));
+
+                if(fpp.getIP().isEmpty()){
+                    continue;
+                }
+
                 if(!fpp_list.contains(fpp)) {
                     fpp_list.add(fpp);
                     //GetFPPStatus(fpp);
@@ -238,7 +268,9 @@ public class MainActivity extends AppCompatActivity {
                     ip_list.add(fpp.getIP());
                 }
             }
-            Collections.sort(fpp_list, new FPPDataComparator());
+            if(fpp_list.size() > 1){
+                Collections.sort(fpp_list, new FPPDataComparator());
+            }
 
             array_Adapter.notifyDataSetChanged();
             SaveFPPList();
@@ -452,9 +484,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void TestModel(FPPData fpp, FPPModel model) {
-        final String channels = String.format("%d-%d", model.getStartChannel(),model.getEndChannel());
-        SetTesting(fpp,1, channels);
+    private void ViewWiring(FPPData fpp) {
+        //final String channels = String.format("%d-%d", model.getStartChannel(),model.getEndChannel());
+        //SetTesting(fpp,1, channels);
+        Intent intent = new Intent(this, WiringViewActivity.class);
+        intent.putExtra(FPP_DATA, fpp);
+        startActivity(intent);
     }
 
     private void startRefresh() {
@@ -512,6 +547,11 @@ public class MainActivity extends AppCompatActivity {
                 array_Adapter.notifyDataSetChanged();
             }
         }
+    }
+
+    private void TestModel(FPPData fpp, FPPModel model) {
+        final String channels = String.format("%d-%d", model.getStartChannel(),model.getEndChannel());
+        SetTesting(fpp,1, channels);
     }
 
     private void Send_HTTP_Request(String url, FPPData fpp) {

@@ -19,6 +19,9 @@
         android:id="@+id/stoptest"
         android:title="Stop Testing" />
     <item
+        android:id="@+id/viewwiring"
+        android:title="View Outputs" />
+    <item
         android:id="@+id/open"
         android:title="Open in Web Browser" />
 </menu>
