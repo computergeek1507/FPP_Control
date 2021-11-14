@@ -8,24 +8,6 @@ import java.util.List;
 
 public class WiringData {
 
-    //public List<PixelOutput> getPixelOutputs() {
-    //    return m_pixelOutputs;
-    //}
-
-   // public List<SerialOutput> getSerialOutputs() {
-   //     return m_serialOutputs;
-   // }
-
-   // public List<OtherOutput> getOtherOutputs() {
-  //      return m_otherOutputs;
-   // }
-
-    //List<PixelOutput> m_pixelOutputs = new ArrayList<PixelOutput>();
-
-    //List<SerialOutput> m_serialOutputs = new ArrayList<SerialOutput>();
-
-    //List<OtherOutput> m_otherOutputs = new ArrayList<OtherOutput>();
-
     public List<FPPOutput> getOutputs() {
               return m_outputs;
     }

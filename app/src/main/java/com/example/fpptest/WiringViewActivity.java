@@ -23,7 +23,6 @@ import java.util.List;
 
 public class WiringViewActivity extends AppCompatActivity {
     RequestQueue queue;
-    //List<String> listItems = new ArrayList<String>();
     FPPWiringRowAdapter array_Adapter;
     ListView wiring_list;
     final List<FPPOutput> fpp_outputs = new ArrayList<FPPOutput>();
