@@ -75,7 +75,7 @@ public class PixelOutput implements FPPOutput {
                     if (json.get(key) instanceof JSONArray) {
                         JSONArray strings = json.getJSONArray(key);
                         for(int j = 0; j < strings.length(); ++j) {
-                            VirtualString vs = new VirtualString(strings.getJSONObject(i));
+                            VirtualString vs = new VirtualString(strings.getJSONObject(j));
                             m_strings.add(vs);
                         }
                     }

@@ -12,6 +12,7 @@ public class FPPData implements Serializable {
     private String m_Version = "";
     private String m_Mode = "";
     private String m_Platform = "";
+    private String m_Variant = "";
     private String m_Status = "";
     private String m_GitBranch = "";
     private String m_FPPD = "";
@@ -46,6 +47,10 @@ public class FPPData implements Serializable {
         return m_Platform;
     }
 
+    public String getVariant() {
+        return m_Variant;
+    }
+
     public String getStatus() {
         return m_Status;
     }
@@ -71,7 +76,10 @@ public class FPPData implements Serializable {
     }
 
     public boolean IsFPPDevice() {
-        return m_typeId > 0x00 && m_typeId < 0x7F;
+        if(m_typeId != 0) {
+            return m_typeId < 0x7F;
+        }
+        return m_Platform.toLowerCase().contains("beaglebone") || m_Platform.toLowerCase().contains("raspberry");
     }
 
     public boolean IsPlayer() {
@@ -124,6 +132,10 @@ public class FPPData implements Serializable {
 
             if (json.has("Platform") ) {
                 m_Platform = json.getString("Platform");
+            }
+
+            if (json.has("Variant") ) {
+                m_Variant = json.getString("Variant");
             }
 
             if (json.has("Branch") ) {

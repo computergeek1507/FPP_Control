@@ -40,6 +40,7 @@ public class WiringViewActivity extends AppCompatActivity {
         // Get the Intent that started this activity and extract the string
         Intent intent = getIntent();
         FPPData data = (FPPData)intent.getSerializableExtra(MainActivity.FPP_DATA);
+        setTitle(data.getHost() + " - " + data.getIP() );
         GetOutputList(data);
     }
 
